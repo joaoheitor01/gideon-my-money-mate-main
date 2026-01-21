@@ -196,6 +196,7 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
               onCheckedChange={(checked) =>
                 setFormData((prev) => ({ ...prev, isIncome: checked }))
               }
+              className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-red-500"
             />
             <span className={`text-sm ${formData.isIncome ? "text-primary" : "text-muted-foreground"}`}>
               Entrada

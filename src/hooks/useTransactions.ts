@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export interface Transaction {
   id: string;
@@ -25,6 +25,7 @@ export interface TransactionInput {
 
 export function useTransactions() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -145,3 +146,4 @@ export function useTransactions() {
     refetch: fetchTransactions,
   };
 }
+

@@ -1,8 +1,19 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Transaction } from "@/hooks/useTransactions";
 import { formatCurrency, formatDate, MONTHS } from "@/lib/formatters";
 import { Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -19,6 +30,8 @@ export function TransactionList({
   onDelete,
   onClearFilter,
 }: TransactionListProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const filteredTransactions = useMemo(() => {
     if (selectedMonth === null) return [];
     
@@ -30,6 +43,12 @@ export function TransactionList({
       );
     });
   }, [transactions, selectedMonth, selectedYear]);
+
+  const handleDelete = async (id: string) => {
+    setIsDeleting(true);
+    await onDelete(id);
+    setIsDeleting(false);
+  };
 
   if (selectedMonth === null) {
     return (
@@ -95,14 +114,35 @@ export function TransactionList({
                     {formatDate(transaction.date)}
                   </td>
                   <td className="p-4 text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(transaction.id)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Essa ação não pode ser desfeita. Isso irá deletar permanentemente sua transação.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(transaction.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {isDeleting ? "Deletando..." : "Deletar"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </td>
                 </tr>
               ))}
