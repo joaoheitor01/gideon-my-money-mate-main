@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -29,13 +29,18 @@ export function useTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTransactions = async () => {
-    if (!user) return;
-    
+  const fetchTransactions = useCallback(async () => {
+    if (!user) {
+      setTransactions([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const { data, error } = await supabase
       .from("transactions")
       .select("*")
+      .eq("user_id", user.id)
       .order("date", { ascending: false });
 
     if (error) {
@@ -48,11 +53,11 @@ export function useTransactions() {
       setTransactions(data as Transaction[]);
     }
     setLoading(false);
-  };
+  }, [user, toast]);
 
   useEffect(() => {
     fetchTransactions();
-  }, [user]);
+  }, [fetchTransactions]);
 
   const addTransaction = async (input: TransactionInput) => {
     if (!user) return { error: new Error("Usuário não autenticado") };
@@ -88,10 +93,13 @@ export function useTransactions() {
   };
 
   const updateTransaction = async (id: string, input: Partial<TransactionInput>) => {
+    if (!user) return { error: new Error("Usuário não autenticado") };
+
     const { data, error } = await supabase
       .from("transactions")
       .update(input)
       .eq("id", id)
+      .eq("user_id", user.id)
       .select()
       .single();
 
@@ -115,10 +123,13 @@ export function useTransactions() {
   };
 
   const deleteTransaction = async (id: string) => {
+    if (!user) return { error: new Error("Usuário não autenticado") };
+
     const { error } = await supabase
       .from("transactions")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", user.id);
 
     if (error) {
       toast({
@@ -146,4 +157,3 @@ export function useTransactions() {
     refetch: fetchTransactions,
   };
 }
-
